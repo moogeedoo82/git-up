@@ -22,8 +22,7 @@ class TokenRotator:
     def rotate(self):
         with self._lock:
             self.current_index = (self.current_index + 1) % len(self.tokens)
-            msg = f"🔄 ROTATION: Switched to Token #{self.current_index + 1}"
-            print(msg)
+            print(f"🔄 ROTATION: Switched to Token #{self.current_index + 1}")
 
 rotator = TokenRotator(GITHUB_TOKENS)
 
@@ -38,10 +37,8 @@ def request_with_retry(method, url, is_graphql=False, **kwargs):
             print(f"⚠️ Network error: {e}. Retrying...")
             time.sleep(5)
             continue
-
         if resp.status_code == 200:
             return resp
-
         if resp.status_code in (403, 429):
             if len(GITHUB_TOKENS) > 1:
                 rotator.rotate()
@@ -53,10 +50,8 @@ def request_with_retry(method, url, is_graphql=False, **kwargs):
                 print(f"🛑 Rate limit — sleeping {wait}s...")
                 time.sleep(wait)
                 continue
-
         print(f"❌ Server Error {resp.status_code}: {resp.text[:80]}")
         time.sleep(5)
-
     print("🚨 Max retries reached. Skipping.")
     return None
 
@@ -71,10 +66,8 @@ async def request_async(method, url, is_graphql=False, **kwargs):
             print(f"⚠️ Network error: {e}. Retrying...")
             await asyncio.sleep(5)
             continue
-
         if resp.status_code == 200:
             return resp
-
         if resp.status_code in (403, 429):
             if len(GITHUB_TOKENS) > 1:
                 rotator.rotate()
@@ -86,9 +79,7 @@ async def request_async(method, url, is_graphql=False, **kwargs):
                 print(f"🛑 Rate limit — sleeping {wait}s...")
                 await asyncio.sleep(wait)
                 continue
-
         print(f"❌ Server Error {resp.status_code}: {resp.text[:80]}")
         await asyncio.sleep(5)
-
     print("🚨 Max retries reached. Skipping.")
     return None
