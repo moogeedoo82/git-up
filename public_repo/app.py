@@ -23,40 +23,35 @@ st.markdown('<div style="background:#0d1117;padding:1.5rem 2rem 1rem;border-bott
 
 @st.cache_data(ttl=3600)
 def load_data():
-    url = os.getenv("SUPABASE_URL")
-    key = os.getenv("SUPABASE_KEY")
-    empty = lambda cols: pd.DataFrame(columns=cols)
-    try:
-        if url and key:
-            sb = create_client(url, key)
-            repos        = pd.DataFrame(sb.table("repositories").select("*").execute().data)
-            contributors = pd.DataFrame(sb.table("contributors").select("*").execute().data)
-            users        = pd.DataFrame(sb.table("users").select("*").execute().data)
-            commits      = pd.DataFrame(sb.table("contributor_commits").select("*").execute().data)
-            history      = pd.DataFrame(sb.table("repo_history").select("*").execute().data)
-        else:
-            raise ValueError("No creds")
-    except Exception:
-        repos        = empty(["repo_id","name","owner","stars","language","created_at","full_name","url","last_modified","topics"])
-        contributors = empty(["repo_id","contributor_login","user_id","type","site_admin"])
-        users        = empty(["user_id","login","contributor_name","joining_date"])
-        commits      = empty(["user_id","repo_id","exact_contributions"])
-        history      = empty(["repo_id","date","stars"])
+    base = os.path.join(os.path.dirname(__file__), "data")
+    def safe_read(filename, cols):
+        path = os.path.join(base, filename)
+        if os.path.exists(path):
+            df = pd.read_csv(path)
+            if not df.empty and len(df.columns) > 1:
+                return df
+        return pd.DataFrame(columns=cols)
+
+    repos        = safe_read("repositories.csv", ["repo_id","name","owner","stars","language","created_at","full_name","url","last_modified","topics"])
+    contributors = safe_read("contributors.csv", ["repo_id","contributor_login","user_id","type","site_admin"])
+    users        = safe_read("users.csv", ["user_id","login","contributor_name","joining_date"])
+    commits      = safe_read("contributor_commits_lookup.csv", ["user_id","repo_id","exact_contributions"])
+    history      = safe_read("repo_history.csv", ["repo_id","date","stars"])
+
     if not repos.empty and "created_at" in repos.columns:
         repos["created_at"] = pd.to_datetime(repos["created_at"], errors="coerce")
+    if not repos.empty and "stars" in repos.columns:
+        repos["stars"] = pd.to_numeric(repos["stars"], errors="coerce")
     if not history.empty and "date" in history.columns:
         history["date"] = pd.to_datetime(history["date"], errors="coerce")
+    if not history.empty and "stars" in history.columns:
+        history["stars"] = pd.to_numeric(history["stars"], errors="coerce")
     return repos, contributors, users, commits, history
 
 repos, contributors, users, commits, history = load_data()
 
 if repos.empty:
-    st.info("🚀 Pipeline hasn't run yet! Data will appear after the first GitHub Actions run at 02:00 UTC.")
-    st.markdown("### What's coming:")
-    st.markdown("- 🏆 Top 300 GitHub repositories ranked by stars")
-    st.markdown("- 📈 Star growth trends over time")
-    st.markdown("- 👥 Top contributors leaderboard")
-    st.markdown("- ⚡ Competition map: stars vs contributors")
+    st.info("Pipeline hasn't run yet! Data will appear after the first GitHub Actions run at 02:00 UTC.")
     st.stop()
 
 with st.sidebar:
@@ -90,7 +85,7 @@ with col_left:
     display.insert(0, "rank", range(1, len(display)+1))
     display["stars"] = display["stars"].apply(lambda x: f"{x/1000:.1f}k")
     display["language"] = display["language"].fillna("—")
-    st.dataframe(display.rename(columns={"rank":"#","name":"Repository","owner":"Owner","stars":"⭐ Stars","language":"Language"}), use_container_width=True, height=400, hide_index=True)
+    st.dataframe(display.rename(columns={"rank":"#","name":"Repository","owner":"Owner","stars":"Stars","language":"Language"}), use_container_width=True, height=400, hide_index=True)
 
 with col_right:
     st.markdown('<div class="section-title">🌐 Language Distribution</div>', unsafe_allow_html=True)
@@ -100,7 +95,7 @@ with col_right:
     st.plotly_chart(fig_lang, use_container_width=True)
 
 st.markdown('<div class="section-title">📈 Star Growth Trends</div>', unsafe_allow_html=True)
-if not history.empty and "date" in history.columns:
+if not history.empty and len(history) > 1:
     top10_ids = repos.nlargest(10,"stars")["repo_id"].tolist()
     top10_names = repos[repos["repo_id"].isin(top10_ids)][["repo_id","name"]]
     hist_top = history[history["repo_id"].isin(top10_ids)].merge(top10_names, on="repo_id")
@@ -108,7 +103,7 @@ if not history.empty and "date" in history.columns:
     fig_trend.update_layout(paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)", font_color="#8b949e", xaxis=dict(showgrid=False), yaxis=dict(showgrid=True,gridcolor="#21262d"), margin=dict(l=0,r=0,t=0,b=0), height=300, hovermode="x unified")
     st.plotly_chart(fig_trend, use_container_width=True)
 else:
-    st.info("Star history will appear after the second daily run.")
+    st.info("Trend chart will appear after the second daily run tomorrow.")
 
 col3a, col3b = st.columns(2)
 with col3a:
@@ -119,14 +114,29 @@ with col3a:
         fig_contrib = px.bar(top_contributors, x="exact_contributions", y="display_name", orientation="h", color="exact_contributions", color_continuous_scale=["#1f3a56","#58a6ff"])
         fig_contrib.update_layout(paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)", font_color="#8b949e", coloraxis_showscale=False, margin=dict(l=0,r=0,t=0,b=0), height=350, yaxis=dict(autorange="reversed"), xaxis=dict(showgrid=True,gridcolor="#21262d"))
         st.plotly_chart(fig_contrib, use_container_width=True)
+    else:
+        st.info("Contributor data coming in next run.")
 
 with col3b:
     st.markdown('<div class="section-title">⚡ Stars vs Contributors</div>', unsafe_allow_html=True)
-    if not contributors.empty:
+    if not contributors.empty and "repo_id" in contributors.columns:
         contrib_count = contributors.groupby("repo_id").size().reset_index(name="contributor_count")
         scatter_df = filtered.merge(contrib_count, on="repo_id", how="left").dropna(subset=["contributor_count"])
-        fig_scatter = px.scatter(scatter_df, x="contributor_count", y="stars", size="stars", color="language", hover_name="name", size_max=30, color_discrete_sequence=px.colors.qualitative.Plotly)
-        fig_scatter.update_layout(paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)", font_color="#8b949e", xaxis=dict(showgrid=True,gridcolor="#21262d"), yaxis=dict(showgrid=True,gridcolor="#21262d"), margin=dict(l=0,r=0,t=0,b=0), height=350)
-        st.plotly_chart(fig_scatter, use_container_width=True)
+        if not scatter_df.empty:
+            fig_scatter = px.scatter(scatter_df, x="contributor_count", y="stars", size="stars", color="language", hover_name="name", size_max=30, color_discrete_sequence=px.colors.qualitative.Plotly)
+            fig_scatter.update_layout(paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)", font_color="#8b949e", xaxis=dict(showgrid=True,gridcolor="#21262d"), yaxis=dict(showgrid=True,gridcolor="#21262d"), margin=dict(l=0,r=0,t=0,b=0), height=350)
+            st.plotly_chart(fig_scatter, use_container_width=True)
+    else:
+        st.info("Competition map coming in next run.")
+
+if not repos.empty and "created_at" in repos.columns:
+    st.markdown('<div class="section-title">🗓 Repository Creation Timeline</div>', unsafe_allow_html=True)
+    repos["year"] = repos["created_at"].dt.year
+    repos["month"] = repos["created_at"].dt.month
+    heat = repos.groupby(["year","month"]).size().reset_index(name="count")
+    heat_pivot = heat.pivot(index="year", columns="month", values="count").fillna(0)
+    fig_heat = px.imshow(heat_pivot, labels=dict(x="Month", y="Year", color="Repos"), color_continuous_scale=["#0d1117","#1f3a56","#58a6ff"], aspect="auto", x=["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"])
+    fig_heat.update_layout(paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)", font_color="#8b949e", margin=dict(l=0,r=0,t=0,b=0), height=200)
+    st.plotly_chart(fig_heat, use_container_width=True)
 
 st.markdown(f'<div style="text-align:center;color:#8b949e;font-size:0.7rem;margin-top:3rem;border-top:1px solid #21262d;padding-top:1rem;font-family:Space Mono,monospace">GitUp · Data refreshed daily · {len(repos):,} repos · {len(users):,} contributors</div>', unsafe_allow_html=True)
