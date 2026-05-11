@@ -1,0 +1,47 @@
+name: Daily GitHub Data Pipeline
+
+on:
+  schedule:
+    - cron: "0 2 * * *"
+  workflow_dispatch:
+
+jobs:
+  run-pipeline:
+    runs-on: ubuntu-latest
+    timeout-minutes: 360
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: "pip"
+
+      - name: Install dependencies
+        run: |
+          pip install httpx[http2] pandas supabase python-dotenv
+
+      - name: Run pipeline
+        env:
+          GITHUB_TOKEN:   ${{ secrets.GH_TOKEN_1 }}
+          GITHUB_TOKEN_2: ${{ secrets.GH_TOKEN_2 }}
+          GITHUB_TOKEN_3: ${{ secrets.GH_TOKEN_3 }}
+          GITHUB_TOKEN_4: ${{ secrets.GH_TOKEN_4 }}
+          GITHUB_TOKEN_5: ${{ secrets.GH_TOKEN_5 }}
+          SUPABASE_URL:   ${{ secrets.SUPABASE_URL }}
+          SUPABASE_KEY:   ${{ secrets.SUPABASE_KEY }}
+        run: |
+          python -m pipeline.main
+
+      - name: Commit updated data
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add public_repo/data/
+          git diff --staged --quiet || git commit -m "chore: daily data update $(date -u +%Y-%m-%d)"
+          git push
