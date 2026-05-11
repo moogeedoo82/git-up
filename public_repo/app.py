@@ -46,6 +46,7 @@ def load_data():
         commits      = pd.read_csv(f"{base}/contributor_commits_lookup.csv")
         history      = pd.read_csv(f"{base}/repo_history.csv")
     for df in [repos, contributors, users, commits, history]:
+        if df.empty: continue
         df.columns = df.columns.str.strip()
     if "created_at" in repos.columns:
         repos["created_at"] = pd.to_datetime(repos["created_at"], errors="coerce")
@@ -130,3 +131,4 @@ with col3b:
         st.plotly_chart(fig_scatter, use_container_width=True)
 
 st.markdown(f'<div style="text-align:center;color:#8b949e;font-size:0.7rem;margin-top:3rem;border-top:1px solid #21262d;padding-top:1rem;font-family:Space Mono,monospace">GitUp · Data refreshed daily · {len(repos):,} repos · {len(users):,} contributors</div>', unsafe_allow_html=True)
+
