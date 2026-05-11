@@ -5,12 +5,7 @@ from supabase import create_client
 import os
 from datetime import datetime
 
-st.set_page_config(
-    page_title="GitUp · GitHub Intelligence",
-    page_icon="⬆",
-    layout="wide",
-    initial_sidebar_state="collapsed",
-)
+st.set_page_config(page_title="GitUp · GitHub Intelligence", page_icon="⬆", layout="wide", initial_sidebar_state="collapsed")
 
 st.markdown("""
 <style>
@@ -24,39 +19,45 @@ html, body, [class*="css"] { font-family: 'Inter', sans-serif; }
 </style>
 """, unsafe_allow_html=True)
 
+st.markdown('<div style="background:#0d1117;padding:1.5rem 2rem 1rem;border-bottom:1px solid #21262d;margin:-4rem -4rem 2rem;display:flex;align-items:baseline;gap:1rem"><span style="font-family:Space Mono,monospace;font-size:1.5rem;font-weight:700;color:#58a6ff">⬆ GitUp</span><span style="font-size:0.75rem;color:#8b949e;text-transform:uppercase;letter-spacing:.05em">GitHub Intelligence · Rankings · Trends · Contributors</span></div>', unsafe_allow_html=True)
+
 @st.cache_data(ttl=3600)
 def load_data():
     url = os.getenv("SUPABASE_URL")
     key = os.getenv("SUPABASE_KEY")
+    empty = lambda cols: pd.DataFrame(columns=cols)
     try:
         if url and key:
             sb = create_client(url, key)
-            repos = pd.DataFrame(sb.table("repositories").select("*").execute().data)
+            repos        = pd.DataFrame(sb.table("repositories").select("*").execute().data)
             contributors = pd.DataFrame(sb.table("contributors").select("*").execute().data)
-            users = pd.DataFrame(sb.table("users").select("*").execute().data)
-            commits = pd.DataFrame(sb.table("contributor_commits").select("*").execute().data)
-            history = pd.DataFrame(sb.table("repo_history").select("*").execute().data)
+            users        = pd.DataFrame(sb.table("users").select("*").execute().data)
+            commits      = pd.DataFrame(sb.table("contributor_commits").select("*").execute().data)
+            history      = pd.DataFrame(sb.table("repo_history").select("*").execute().data)
         else:
-            raise ValueError("No Supabase creds")
+            raise ValueError("No creds")
     except Exception:
-        base = "data"
-        repos        = pd.read_csv(f"{base}/repositories.csv")
-        contributors = pd.read_csv(f"{base}/contributors.csv")
-        users        = pd.read_csv(f"{base}/users.csv")
-        commits      = pd.read_csv(f"{base}/contributor_commits_lookup.csv")
-        history      = pd.read_csv(f"{base}/repo_history.csv")
-    for df in [repos, contributors, users, commits, history]:
-        if df.empty: continue
-        df.columns = df.columns.str.strip()
-    if "created_at" in repos.columns:
+        repos        = empty(["repo_id","name","owner","stars","language","created_at","full_name","url","last_modified","topics"])
+        contributors = empty(["repo_id","contributor_login","user_id","type","site_admin"])
+        users        = empty(["user_id","login","contributor_name","joining_date"])
+        commits      = empty(["user_id","repo_id","exact_contributions"])
+        history      = empty(["repo_id","date","stars"])
+    if not repos.empty and "created_at" in repos.columns:
         repos["created_at"] = pd.to_datetime(repos["created_at"], errors="coerce")
-    if "date" in history.columns:
+    if not history.empty and "date" in history.columns:
         history["date"] = pd.to_datetime(history["date"], errors="coerce")
-    if "stars" in history.columns:
-        history["stars"] = pd.to_numeric(history["stars"], errors="coerce")
     return repos, contributors, users, commits, history
 
 repos, contributors, users, commits, history = load_data()
+
+if repos.empty:
+    st.info("🚀 Pipeline hasn't run yet! Data will appear after the first GitHub Actions run at 02:00 UTC.")
+    st.markdown("### What's coming:")
+    st.markdown("- 🏆 Top 300 GitHub repositories ranked by stars")
+    st.markdown("- 📈 Star growth trends over time")
+    st.markdown("- 👥 Top contributors leaderboard")
+    st.markdown("- ⚡ Competition map: stars vs contributors")
+    st.stop()
 
 with st.sidebar:
     st.markdown("### Filters")
@@ -69,8 +70,6 @@ filtered = repos.copy()
 if lang_filter != "All":
     filtered = filtered[filtered["language"] == lang_filter]
 filtered = filtered[filtered["stars"] >= star_min].nlargest(top_n, "stars")
-
-st.markdown('<div style="background:#0d1117;padding:1.5rem 2rem 1rem;border-bottom:1px solid #21262d;margin:-4rem -4rem 2rem;display:flex;align-items:baseline;gap:1rem"><span style="font-family:Space Mono,monospace;font-size:1.5rem;font-weight:700;color:#58a6ff">⬆ GitUp</span><span style="font-size:0.75rem;color:#8b949e;text-transform:uppercase;letter-spacing:.05em">GitHub Intelligence · Rankings · Trends · Contributors</span></div>', unsafe_allow_html=True)
 
 k1,k2,k3,k4,k5 = st.columns(5)
 def metric_card(col, value, label):
@@ -131,4 +130,3 @@ with col3b:
         st.plotly_chart(fig_scatter, use_container_width=True)
 
 st.markdown(f'<div style="text-align:center;color:#8b949e;font-size:0.7rem;margin-top:3rem;border-top:1px solid #21262d;padding-top:1rem;font-family:Space Mono,monospace">GitUp · Data refreshed daily · {len(repos):,} repos · {len(users):,} contributors</div>', unsafe_allow_html=True)
-
