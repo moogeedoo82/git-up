@@ -54,5 +54,7 @@ jobs:
           RCLONE_CONFIG_GDRIVE_TOKEN: ${{ secrets.RCLONE_GDRIVE_TOKEN }}
         run: |
           curl https://rclone.org/install.sh | sudo bash
-          rclone copy public_repo/data/ gdrive:gitup-backup/data/ --transfers=8
+          DATE=$(date -u +%Y-%m-%d)
+          rclone copy public_repo/data/ gdrive:gitup-backup/$DATE/ --transfers=8
           echo "✅ Google Drive backup complete!"
+
