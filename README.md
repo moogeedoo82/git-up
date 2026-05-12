@@ -1,27 +1,38 @@
 # ⬆ GitUp Arena — GitHub Intelligence Dashboard
 
-## 🚀 [LIVE DASHBOARD → moogeedoo82.github.io/git-up](https://moogeedoo82.github.io/git-up)
+[![Live Arena](https://img.shields.io/badge/🚀_Live_Arena-moogeedoo82.github.io/git--up-58a6ff?style=for-the-badge&labelColor=0d1117)](https://moogeedoo82.github.io/git-up)
+[![Daily Pipeline](https://img.shields.io/github/actions/workflow/status/moogeedoo82/git-up/daily_pipeline.yml?style=for-the-badge&label=Daily%20Pipeline&labelColor=0d1117)](https://github.com/moogeedoo82/git-up/actions)
+[![Python](https://img.shields.io/badge/Python-3.11-58a6ff?style=for-the-badge&labelColor=0d1117&logo=python&logoColor=white)](https://python.org)
 
-> Real-time rankings, races, and contributor intelligence for the top 300 GitHub repositories — updated every day automatically.
+> The only dashboard that tracks, ranks, and visualizes the entire GitHub ecosystem — updated every single day, fully automatically.
+
+## 🔴 [→ Open Live Dashboard](https://moogeedoo82.github.io/git-up)
+
+[![GitUp Arena Preview](https://raw.githubusercontent.com/moogeedoo82/git-up/main/public_repo/preview.png)](https://moogeedoo82.github.io/git-up)
 
 ---
 
-### What's inside the Arena:
-- 🏎️ Repo Race — animated bar race, sortable by stars, age, language
-- 🌍 Star Network — interactive D3 force graph of languages and repos
-- 👑 Hall of Fame — top contributors across all 300 repos
-- 🗓 Age vs Stars — discover young repos punching above their weight
-- ⚡ Daily Drama — the stories behind the numbers, updated daily
+## Features
+- 🏎️ **Repo Race** — animated bar race, sortable by stars, age, language
+- 🌍 **Star Network** — interactive D3 force graph of languages and repos
+- 👑 **Hall of Fame** — top contributors across all 300 repos
+- 🗓 **Age vs Stars** — discover young repos punching above their weight
+- ⚡ **Daily Drama** — the stories behind the numbers, updated daily
 
-### Tech Stack
+## Tech Stack
 - Data: Python · httpx · GitHub REST + GraphQL API
-- Storage: Supabase + CSV snapshots in this repo
-- Automation: GitHub Actions (daily at 02:00 UTC)
+- Storage: Supabase + CSV snapshots
+- Automation: GitHub Actions (daily at 02:00 UTC · no laptop needed)
 - Visualization: D3.js · Pure HTML/CSS/JS
 - Backup: Google Drive via rclone
 
-### Data updated daily in public_repo/data/
-- repositories.csv · contributors.csv · users.csv · repo_history.csv
+## Data Files (updated daily)
+| File | Description |
+|---|---|
+| repositories.csv | Top 300 repos with stars, language, topics |
+| contributors.csv | All contributors per repo |
+| users.csv | Unique contributor profiles |
+| repo_history.csv | Daily star snapshots for trend tracking |
 
 ---
-Built with love · Fully automated · No laptop needed
+Built with love · Fully automated · Star this repo if you find it useful! ⭐
