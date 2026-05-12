@@ -8,6 +8,8 @@
 
 ## 🔴 [→ Open Live Dashboard](https://moogeedoo82.github.io/git-up)
 
+[![GitUp Arena Preview](https://raw.githubusercontent.com/moogeedoo82/git-up/main/public_repo/preview.png)](https://moogeedoo82.github.io/git-up)
+
 ---
 
 ## Features
@@ -33,3 +35,4 @@
 
 ---
 Built with love · Fully automated · Star this repo if you find it useful! ⭐
+
