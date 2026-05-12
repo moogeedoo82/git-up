@@ -47,3 +47,12 @@ jobs:
           git pull --rebase origin main
           git push
 
+      - name: Backup data to Google Drive
+        env:
+          RCLONE_CONFIG_GDRIVE_TYPE: drive
+          RCLONE_CONFIG_GDRIVE_SCOPE: drive
+          RCLONE_CONFIG_GDRIVE_TOKEN: ${{ secrets.RCLONE_GDRIVE_TOKEN }}
+        run: |
+          curl https://rclone.org/install.sh | sudo bash
+          rclone copy public_repo/data/ gdrive:gitup-backup/data/ --transfers=8
+          echo "✅ Google Drive backup complete!"
