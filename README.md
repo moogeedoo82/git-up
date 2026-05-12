@@ -8,8 +8,6 @@
 
 ## 🔴 [→ Open Live Dashboard](https://moogeedoo82.github.io/git-up)
 
-[![GitUp Arena Preview](https://raw.githubusercontent.com/moogeedoo82/git-up/main/public_repo/preview.png)](https://moogeedoo82.github.io/git-up)
-
 ---
 
 ## Features
@@ -26,13 +24,13 @@
 - Visualization: D3.js · Pure HTML/CSS/JS
 - Backup: Google Drive via rclone
 
-## Data Files (updated daily)
+## Data (updated daily)
 | File | Description |
 |---|---|
-| repositories.csv | Top 300 repos with stars, language, topics |
-| contributors.csv | All contributors per repo |
-| users.csv | Unique contributor profiles |
-| repo_history.csv | Daily star snapshots for trend tracking |
+| repositories | Top 300 repos with stars, language, topics |
+| contributors | All contributors per repo |
+| users | Unique contributor profiles |
+| repo_history | Daily star snapshots for trend tracking |
 
 ---
 Built with love · Fully automated · Star this repo if you find it useful! ⭐
