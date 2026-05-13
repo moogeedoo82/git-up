@@ -96,6 +96,8 @@ footer a{color:var(--accent);text-decoration:none}
 ::-webkit-scrollbar{width:6px;height:6px}
 ::-webkit-scrollbar-track{background:var(--bg2)}
 ::-webkit-scrollbar-thumb{background:var(--bg4);border-radius:3px}
+#ageList::-webkit-scrollbar{width:4px}
+#ageList::-webkit-scrollbar-thumb{background:var(--accent);border-radius:2px}
 </style>
 </head>
 <body>
@@ -104,7 +106,7 @@ footer a{color:var(--accent);text-decoration:none}
 <header><div class="wrap hi">
   <div class="logo"><span style="color:var(--accent2)">⬆</span> GitUp Arena</div>
   <div style="display:flex;align-items:center;gap:16px">
-    <div class="lb"><div class="ld"></div> Live · Updated Daily</div>
+    <div class="lb"><div class="ld"></div> Updated: <span id="lastUpdate">loading...</span></div>
     <a href="https://github.com/moogeedoo82/git-up" target="_blank" style="color:var(--text2);font-size:12px;font-family:var(--fm);text-decoration:none">★ Star on GitHub</a>
   </div>
 </div></header>
@@ -125,6 +127,8 @@ footer a{color:var(--accent);text-decoration:none}
     <button class="sb" onclick="showSec('contributors')">👑 Hall of Fame</button>
     <button class="sb" onclick="showSec('age')">🗓 Age vs Stars</button>
     <button class="sb" onclick="showSec('drama')">⚡ Daily Drama</button>
+    <button class="sb" onclick="showSec('galaxy')">🌌 Contributor Galaxy</button>
+    <button class="sb" onclick="showSec('rising')">🚀 Rising Stars</button>
   </nav>
   <div class="sec active" id="s-race">
     <div class="sh"><h2 class="st">🏎️ Repo Race</h2><p class="sd">Which repository dominates? Watch the bars race. Hover any bar for repo details. Click a name to visit GitHub.</p></div>
@@ -150,12 +154,24 @@ footer a{color:var(--accent);text-decoration:none}
     <div class="cg" id="cg"></div>
   </div>
   <div class="sec" id="s-age">
-    <div class="sh"><h2 class="st">🗓 Age vs Stars</h2><p class="sd">Does age equal popularity? Each circle is a repository. Hover to explore. Find the young repos punching above their weight.</p></div>
-    <svg id="ac" height="480" style="width:100%"></svg>
+    <div class="sh"><h2 class="st">🗓 Age vs Stars</h2><p class="sd">Does age equal popularity? Each circle is a repository. Click any repo in the list to highlight it on the chart.</p></div>
+    <div style="display:flex;gap:20px;align-items:flex-start">
+      <svg id="ac" height="480" style="flex:1;min-width:0"></svg>
+      <div id="ageList" style="width:220px;flex-shrink:0;height:480px;overflow-y:auto;background:var(--bg3);border:1px solid var(--border);border-radius:12px;padding:8px"></div>
+    </div>
   </div>
   <div class="sec" id="s-drama">
     <div class="sh"><h2 class="st">⚡ Daily Drama</h2><p class="sd">The stories behind the data. Updated fresh every day automatically.</p></div>
     <div class="dg" id="dg"></div>
+  </div>
+  <div class="sec" id="s-galaxy">
+    <div class="sh"><h2 class="st">🌌 Contributor Galaxy</h2><p class="sd">Contributors (large nodes) connected to the repos they contributed to. Drag to explore. Hover for details. Click contributor to visit GitHub profile.</p></div>
+    <svg id="gc" height="620" style="width:100%"></svg>
+    <div id="gl" style="display:flex;flex-wrap:wrap;gap:12px;margin-top:16px;font-size:12px;color:var(--text2)"></div>
+  </div>
+  <div class="sec" id="s-rising">
+    <div class="sh"><h2 class="st">🚀 Rising Stars</h2><p class="sd">Repos gaining stars fastest over the tracked period. The bigger the jump, the hotter the project.</p></div>
+    <div id="risingContent"></div>
   </div>
 </div></main>
 <footer><div class="wrap"><p>⬆ GitUp Arena · <a href="https://github.com/moogeedoo82/git-up" target="_blank">github.com/moogeedoo82/git-up</a> · Data refreshed daily at 02:00 UTC via GitHub Actions · <span id="fc"></span></p></div></footer>
@@ -167,7 +183,7 @@ const LC={'Python':'#3572A5','TypeScript':'#2b7489','JavaScript':'#f1e05a','Mark
 const AVC=['#58a6ff','#3fb950','#f78166','#d2a8ff','#ffa657','#79c0ff','#56d364','#ff7b72'];
 let repos=[],contributors=[],users=[],commits=[],contribFull=[];
 let curRD=[],curSort='stars';
-let built={race:true,universe:false,contributors:false,age:false,drama:false};
+let built={race:true,universe:false,contributors:false,age:false,drama:false,galaxy:false,rising:false};
 
 function showTip(e,h){TT.innerHTML=h;TT.style.display='block';moveTip(e);}
 function moveTip(e){
@@ -231,6 +247,18 @@ function buildKPIs(){
   ac('k1',repos.length,'','');ac('k2',Math.round(ts/1e6*10)/10,'','M');
   ac('k3',uu.size||users.length,'','');ac('k4',langs.size,'','');
   document.getElementById('fc').textContent=`${repos.length} repos · ${(uu.size||users.length).toLocaleString()} contributors`;
+  // Set last update date from repo history
+  if(history.length>0){
+    const dates=history.map(h=>h.date).filter(Boolean).sort();
+    const lastDate=dates[dates.length-1];
+    if(lastDate){
+      const d=new Date(lastDate);
+      const fmt=d.toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'});
+      document.getElementById('lastUpdate').textContent=fmt;
+    }
+  } else {
+    document.getElementById('lastUpdate').textContent=new Date().toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'});
+  }
 }
 
 function ac(id,target,pre,suf){
@@ -327,7 +355,30 @@ function buildUniverse(){
   const lnodes=langSet.map(l=>({id:'l_'+l,label:l,type:'lang',count:top.filter(r=>r.language===l).length,color:LC[l]||'#58a6ff'}));
   const rnodes=top.map(r=>({id:'r_'+r.name,label:r.name,type:'repo',stars:r.stars,language:r.language,owner:r.owner,url:r.url,age:r.ageStr,topics:r.topics,color:(LC[r.language]||'#58a6ff')+'cc'}));
   const nodes=[...lnodes,...rnodes];
-  const links=rnodes.map(r=>({source:'l_'+r.language,target:'r_'+r.label})).filter(l=>lnodes.find(n=>n.id===l.source));
+  // Build multi-language links - some repos have multiple languages
+  const LANG_ALIASES={'JavaScript':'JavaScript','TypeScript':'TypeScript','Python':'Python',
+    'C++':'C++','Java':'Java','Go':'Go','Rust':'Rust','Shell':'Shell',
+    'HTML':'HTML','C':'C','Markdown':'Markdown'};
+  const links=[];
+  const addedLinks=new Set();
+  rnodes.forEach(r=>{
+    // Primary language
+    if(lnodes.find(n=>n.id==='l_'+r.language)){
+      const key='l_'+r.language+'_r_'+r.label;
+      if(!addedLinks.has(key)){links.push({source:'l_'+r.language,target:'r_'+r.label});addedLinks.add(key);}
+    }
+    // Secondary languages from topics field
+    if(r.topics){
+      const topicLangs=r.topics.split(',').map(t=>t.trim())
+        .filter(t=>LANG_ALIASES[t]&&t!==r.language);
+      topicLangs.slice(0,2).forEach(lang=>{
+        if(lnodes.find(n=>n.id==='l_'+lang)){
+          const key='l_'+lang+'_r_'+r.label;
+          if(!addedLinks.has(key)){links.push({source:'l_'+lang,target:'r_'+r.label,secondary:true});addedLinks.add(key);}
+        }
+      });
+    }
+  });
 
   const rS=d3.scaleSqrt().domain([0,d3.max(rnodes,d=>d.stars)]).range([5,18]);
   const lS=d3.scaleSqrt().domain([1,d3.max(lnodes,d=>d.count)]).range([24,46]);
@@ -342,7 +393,10 @@ function buildUniverse(){
     .alphaDecay(0.02);
 
   const link=svg.append('g').selectAll('line').data(links).join('line')
-    .attr('stroke','#30363d').attr('stroke-width',0.8).attr('stroke-opacity',0.5);
+    .attr('stroke',d=>d.secondary?'#58a6ff':'#30363d')
+    .attr('stroke-width',d=>d.secondary?0.5:0.8)
+    .attr('stroke-opacity',d=>d.secondary?0.3:0.5)
+    .attr('stroke-dasharray',d=>d.secondary?'3,3':'none');
 
   const node=svg.append('g').selectAll('g').data(nodes).join('g')
     .style('cursor','pointer')
@@ -563,6 +617,8 @@ function buildAge(){
     .attr('x',d=>x(d.age)+r(d.stars)+3).attr('y',d=>y(d.stars)+4)
     .style('font-size','10px').style('fill','#8b949e').style('pointer-events','none')
     .text(d=>d.name.length>14?d.name.slice(0,14)+'…':d.name);
+  // Build scrollable list
+  buildAgeList(data,x,y,r);
 }
 
 function buildDrama(){
@@ -623,7 +679,266 @@ function showSec(name){
     if(name==='contributors')buildContribs();
     if(name==='age')buildAge();
     if(name==='drama'){ if(!built['contributors']){built['contributors']=true;buildContribs();} buildDrama(); }
+    if(name==='galaxy'){ if(!built['contributors']){built['contributors']=true;buildContribs();} buildGalaxy(); }
+    if(name==='rising')buildRising();
   }
+}
+
+
+// ── AGE vs STARS: scrollable list with highlight ──────────────────────────────
+function buildAgeList(data, xScale, yScale, rScale){
+  const list = document.getElementById('ageList');
+  if(!list) return;
+  const sorted = [...data].sort((a,b)=>b.stars-a.stars);
+  list.innerHTML = sorted.map((r,i)=>`
+    <div onclick="highlightRepo('${r.name.replace(/'/g,"\\'")}',this)" style="padding:6px 8px;border-radius:6px;cursor:pointer;font-size:11px;border-bottom:1px solid var(--bg4);transition:background .15s"
+      onmouseenter="this.style.background='var(--bg4)'" onmouseleave="this.style.background='transparent'">
+      <div style="color:var(--accent);font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${r.name}</div>
+      <div style="color:var(--text2);font-size:10px">${r.ageStr} · ${(r.stars/1000).toFixed(0)}k ⭐</div>
+    </div>`).join('');
+}
+
+let highlightTimer=null;
+function highlightRepo(name, el){
+  // Reset previous
+  document.querySelectorAll('#ac circle').forEach(c=>{
+    c.style.filter='none';c.style.opacity='0.99';c.style.transform='';
+  });
+  if(highlightTimer) clearTimeout(highlightTimer);
+  // Highlight in list
+  document.querySelectorAll('#ageList div').forEach(d=>d.style.background='transparent');
+  if(el) el.style.background='var(--accent)22';
+  // Find and highlight circle
+  const svg=d3.select('#ac');
+  svg.selectAll('circle').each(function(d){
+    if(d&&d.name===name){
+      d3.select(this)
+        .raise()
+        .transition().duration(300)
+        .attr('r', function(){ return +d3.select(this).attr('r')*1.8; })
+        .style('filter','drop-shadow(0 0 12px var(--accent))')
+        .style('opacity',1);
+      // Reset after 5 seconds
+      highlightTimer=setTimeout(()=>{
+        d3.select(this).transition().duration(500)
+          .attr('r', function(){ return +d3.select(this).attr('r')/1.8; })
+          .style('filter','none');
+        if(el)el.style.background='transparent';
+      },5000);
+    }
+  });
+}
+
+// ── CONTRIBUTOR GALAXY ────────────────────────────────────────────────────────
+function buildGalaxy(){
+  const svg=d3.select('#gc');
+  const W=document.getElementById('gc').parentElement.clientWidth||900;
+  const H=620;
+  svg.attr('width',W).attr('height',H).selectAll('*').remove();
+
+  // Take top 30 contributors by repos and top 80 repos
+  const topContribs=contribFull.slice(0,30);
+  const topRepos=repos.slice(0,80);
+
+  // Build repo lookup by login from contributors CSV
+  const loginToRepos={};
+  contributors.forEach(c=>{
+    const login=String(c.contributor_login||'').trim();
+    const repo=String(c.repo_id||'').trim();
+    if(!login||!repo)return;
+    if(!loginToRepos[login])loginToRepos[login]=new Set();
+    loginToRepos[login].add(repo);
+  });
+
+  // Repo id to name map
+  const repoIdToName={};
+  topRepos.forEach(r=>repoIdToName[String(r.repo_id)]=r.name);
+
+  // Build nodes
+  const contribNodes=topContribs.map((c,i)=>({
+    id:'c_'+c.login, label:c.login, type:'contrib',
+    repos:c.repos, color:AVC[i%AVC.length]
+  }));
+
+  // Only include repos that have at least one of our top contributors
+  const activeRepoIds=new Set();
+  topContribs.forEach(c=>{
+    const rSet=loginToRepos[c.login]||new Set();
+    [...rSet].slice(0,8).forEach(rid=>activeRepoIds.add(rid));
+  });
+
+  const repoNodes=[...activeRepoIds].slice(0,60).map(rid=>{
+    const r=topRepos.find(r=>String(r.repo_id)===rid);
+    return {
+      id:'r_'+rid, label:r?r.name:rid, type:'repo',
+      stars:r?r.stars:0, url:r?r.url:'#',
+      color:(LC[r?.language]||'#58a6ff')+'cc'
+    };
+  });
+
+  const nodes=[...contribNodes,...repoNodes];
+
+  // Links: contributor -> repos they contributed to
+  const links=[];
+  topContribs.forEach(c=>{
+    const rSet=loginToRepos[c.login]||new Set();
+    [...rSet].slice(0,8).forEach(rid=>{
+      if(activeRepoIds.has(rid))
+        links.push({source:'c_'+c.login, target:'r_'+rid});
+    });
+  });
+
+  const rS=d3.scaleSqrt().domain([0,d3.max(repoNodes,d=>d.stars)||1]).range([4,16]);
+  const cS=d3.scaleSqrt().domain([1,d3.max(contribNodes,d=>d.repos)||1]).range([14,32]);
+
+  const sim=d3.forceSimulation(nodes)
+    .force('link',d3.forceLink(links).id(d=>d.id).distance(70).strength(0.5))
+    .force('charge',d3.forceManyBody().strength(d=>d.type==='contrib'?-300:-60))
+    .force('center',d3.forceCenter(W/2,H/2))
+    .force('collision',d3.forceCollide(d=>d.type==='contrib'?cS(d.repos)+4:rS(d.stars||1)+3))
+    .alphaDecay(0.02);
+
+  const link=svg.append('g').selectAll('line').data(links).join('line')
+    .attr('stroke','#30363d').attr('stroke-width',0.6).attr('stroke-opacity',0.5);
+
+  const node=svg.append('g').selectAll('g').data(nodes).join('g')
+    .style('cursor','pointer')
+    .call(d3.drag()
+      .on('start',(e,d)=>{if(!e.active)sim.alphaTarget(.3).restart();d.fx=d.x;d.fy=d.y;})
+      .on('drag',(e,d)=>{d.fx=e.x;d.fy=e.y;})
+      .on('end',(e,d)=>{if(!e.active)sim.alphaTarget(0);d.fx=null;d.fy=null;})
+    )
+    .on('click',(e,d)=>{
+      if(d.type==='contrib')window.open('https://github.com/'+d.label,'_blank');
+      else if(d.url&&d.url!=='#')window.open(d.url,'_blank');
+    })
+    .on('mousemove',(e,d)=>{
+      if(d.type==='contrib'){
+        showTip(e,`<div class="tn">@${d.label}</div>
+          <div class="tr"><span>Repos contributed</span><span class="tv">${d.repos}</span></div>
+          <div class="tab">Click to view GitHub profile →</div>`);
+      } else {
+        showTip(e,`<div class="tn">${d.label}</div>
+          <div class="tr"><span>Stars</span><span class="tv">${(d.stars||0).toLocaleString()}</span></div>
+          <div class="tab">Click to visit repo →</div>`);
+      }
+      moveTip(e);
+    })
+    .on('mouseleave',hideTip);
+
+  node.append('circle')
+    .attr('r',d=>d.type==='contrib'?cS(d.repos):rS(d.stars||1))
+    .attr('fill',d=>d.type==='contrib'?d.color+'44':d.color)
+    .attr('stroke',d=>d.color)
+    .attr('stroke-width',d=>d.type==='contrib'?2:1);
+
+  node.filter(d=>d.type==='contrib').append('text')
+    .attr('text-anchor','middle').attr('dy','0.35em')
+    .style('font-size','9px').style('font-weight','700').style('fill',d=>d.color)
+    .style('pointer-events','none').style('font-family','Space Mono,monospace')
+    .text(d=>d.label.length>8?d.label.slice(0,8)+'…':d.label);
+
+  // Slow float
+  const PAD=40;
+  nodes.forEach(d=>{d.vx=(Math.random()-.5)*.06;d.vy=(Math.random()-.5)*.06;});
+  sim.on('end',()=>{
+    function ft(){
+      nodes.forEach(d=>{
+        if(d.fx!==null&&d.fx!==undefined)return;
+        const r=d.type==='contrib'?cS(d.repos):rS(d.stars||1);
+        d.x+=d.vx;d.y+=d.vy;
+        if(d.x-r<PAD){d.x=PAD+r;d.vx=Math.abs(d.vx)*.8;}
+        if(d.x+r>W-PAD){d.x=W-PAD-r;d.vx=-Math.abs(d.vx)*.8;}
+        if(d.y-r<PAD){d.y=PAD+r;d.vy=Math.abs(d.vy)*.8;}
+        if(d.y+r>H-PAD){d.y=H-PAD-r;d.vy=-Math.abs(d.vy)*.8;}
+        d.vx+=(Math.random()-.5)*.003;d.vy+=(Math.random()-.5)*.003;
+        const sp=Math.sqrt(d.vx*d.vx+d.vy*d.vy);
+        if(sp>.08){d.vx=d.vx/sp*.08;d.vy=d.vy/sp*.08;}
+      });
+      link.attr('x1',d=>d.source.x).attr('y1',d=>d.source.y)
+          .attr('x2',d=>d.target.x).attr('y2',d=>d.target.y);
+      node.attr('transform',d=>`translate(${d.x},${d.y})`);
+      requestAnimationFrame(ft);
+    }
+    ft();
+  });
+
+  sim.on('tick',()=>{
+    link.attr('x1',d=>d.source.x).attr('y1',d=>d.source.y)
+        .attr('x2',d=>d.target.x).attr('y2',d=>d.target.y);
+    node.attr('transform',d=>`translate(${d.x},${d.y})`);
+  });
+
+  document.getElementById('gl').innerHTML=
+    '<span style="color:var(--accent2)">● Large = contributor</span>' +
+    '<span style="color:var(--text2)">● Small = repo</span>' +
+    '<span style="color:var(--text2)">· Click contributor to view profile · Click repo to visit</span>';
+}
+
+// ── RISING STARS ──────────────────────────────────────────────────────────────
+function buildRising(){
+  const el=document.getElementById('risingContent');
+  if(!history||history.length<2){
+    el.innerHTML='<div style="color:var(--text2);padding:20px">Rising stars data appears after 2+ days of tracking.</div>';
+    return;
+  }
+
+  // Get dates
+  const dates=[...new Set(history.map(h=>h.date).filter(Boolean))].sort();
+  if(dates.length<2){
+    el.innerHTML='<div style="color:var(--text2);padding:20px">Need at least 2 days of data. Check back tomorrow!</div>';
+    return;
+  }
+
+  const first=dates[0], last=dates[dates.length-1];
+  const firstMap={}, lastMap={};
+  history.forEach(h=>{
+    if(h.date===first)firstMap[h.repo_id]=+h.stars||0;
+    if(h.date===last)lastMap[h.repo_id]=+h.stars||0;
+  });
+
+  // Calculate growth
+  const growth=Object.keys(lastMap).map(rid=>{
+    const r=repos.find(r=>String(r.repo_id)===String(rid));
+    const gain=(lastMap[rid]||0)-(firstMap[rid]||0);
+    const pct=firstMap[rid]>0?Math.round(gain/firstMap[rid]*1000)/10:0;
+    return {rid,name:r?.name||rid,owner:r?.owner||'',stars:lastMap[rid],gain,pct,url:r?.url||'#',language:r?.language||'—'};
+  }).filter(r=>r.gain>0).sort((a,b)=>b.gain-a.gain).slice(0,20);
+
+  if(!growth.length){
+    el.innerHTML='<div style="color:var(--text2);padding:20px">No growth data yet. Check back tomorrow!</div>';
+    return;
+  }
+
+  const maxGain=growth[0].gain;
+  el.innerHTML=`
+    <div style="font-size:12px;color:var(--text2);margin-bottom:16px;font-family:var(--fm)">
+      Tracking period: ${first} → ${last} (${dates.length} days)
+    </div>
+    ${growth.map((r,i)=>{
+      const col=LC[r.language]||'#58a6ff';
+      const pct=Math.round(r.gain/maxGain*100);
+      return `<div style="display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--bg4);cursor:pointer"
+        onclick="window.open('${r.url}','_blank')">
+        <div style="font-family:var(--fm);font-size:12px;color:var(--text3);width:24px;text-align:right">${i+1}</div>
+        <div style="width:160px;flex-shrink:0">
+          <div style="color:var(--accent);font-size:13px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${r.name}</div>
+          <div style="color:var(--text2);font-size:11px">${r.owner}</div>
+        </div>
+        <div style="flex:1;height:24px;background:var(--bg4);border-radius:6px;overflow:hidden">
+          <div style="height:100%;width:${pct}%;background:linear-gradient(90deg,${col}aa,${col});border-radius:6px;display:flex;align-items:center;padding-left:8px;transition:width 1s ease">
+            <span style="font-size:10px;color:rgba(255,255,255,.8);font-family:var(--fm);white-space:nowrap">${pct>20?r.owner:''}</span>
+          </div>
+        </div>
+        <div style="font-family:var(--fm);font-size:12px;color:var(--accent2);width:70px;text-align:right">+${r.gain.toLocaleString()}</div>
+        <div style="font-size:11px;padding:2px 8px;border-radius:10px;background:${col}22;color:${col};width:76px;text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${r.language}</div>
+      </div>`;
+    }).join('')}`;
+
+  // Animate bars
+  setTimeout(()=>{
+    el.querySelectorAll('[style*="width:0"]').forEach(b=>{b.style.width=b.dataset.w+'%';});
+  },100);
 }
 
 function sample(){
