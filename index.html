@@ -392,7 +392,6 @@ function buildUniverse(){
     .force('x',d3.forceX(W/2).strength(0.06))
     .force('y',d3.forceY(H/2).strength(0.06))
     .alphaDecay(0.02).stop();
-  for(let i=0;i<200;i++) sim.tick();
 
   const link=svg.append('g').selectAll('line').data(links).join('line')
     .attr('stroke',d=>d.secondary?'#58a6ff':'#30363d')
@@ -939,7 +938,6 @@ function renderGalaxyGraph(svg,W,H,nodes,links,loadMsg){
     .force('center',d3.forceCenter(W/2,H/2))
     .force('collision',d3.forceCollide(d=>d.type==='contrib'?cS(d.repos)+4:rS(d.stars||1)+3))
     .alphaDecay(0.02).stop();
-  for(let i=0;i<200;i++) sim.tick();
 
   const link=svg.append('g').selectAll('line').data(links).join('line')
     .attr('stroke','#30363d').attr('stroke-width',0.6).attr('stroke-opacity',0.5);
@@ -1138,4 +1136,6 @@ init();
 </script>
 </body>
 </html>
+
+
 
