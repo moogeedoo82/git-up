@@ -155,9 +155,9 @@ footer a{color:var(--accent);text-decoration:none}
   </div>
   <div class="sec" id="s-age">
     <div class="sh"><h2 class="st">🗓 Age vs Stars</h2><p class="sd">Does age equal popularity? Each circle is a repository. Click any repo in the list to highlight it on the chart.</p></div>
-    <div style="display:flex;gap:20px;align-items:flex-start">
+    <div style="display:flex;gap:20px;align-items:center">
       <svg id="ac" height="480" style="flex:1;min-width:0"></svg>
-      <div id="ageList" style="width:220px;flex-shrink:0;height:480px;overflow-y:auto;padding:4px 0 4px 8px;background:transparent"></div>
+      <div id="ageList" style="width:220px;flex-shrink:0;height:480px;overflow-y:auto;padding:4px 0 4px 8px;background:transparent;align-self:center"></div>
     </div>
   </div>
   <div class="sec" id="s-drama">
@@ -391,7 +391,9 @@ function buildUniverse(){
     .force('collision',d3.forceCollide(d=>d.type==='lang'?lS(d.count)+6:rS(d.stars||1)+3))
     .force('x',d3.forceX(W/2).strength(0.06))
     .force('y',d3.forceY(H/2).strength(0.06))
-    .alphaDecay(0.02);
+    .alphaDecay(0.02).stop();
+  for(let i=0;i<200;i++) sim.tick();
+  sim.restart();
 
   const link=svg.append('g').selectAll('line').data(links).join('line')
     .attr('stroke',d=>d.secondary?'#58a6ff':'#30363d')
@@ -938,7 +940,9 @@ function renderGalaxyGraph(svg,W,H,nodes,links,loadMsg){
     .force('charge',d3.forceManyBody().strength(d=>d.type==='contrib'?-300:-60))
     .force('center',d3.forceCenter(W/2,H/2))
     .force('collision',d3.forceCollide(d=>d.type==='contrib'?cS(d.repos)+4:rS(d.stars||1)+3))
-    .alphaDecay(0.02);
+    .alphaDecay(0.02).stop();
+  for(let i=0;i<200;i++) sim.tick();
+  sim.restart();
 
   const link=svg.append('g').selectAll('line').data(links).join('line')
     .attr('stroke','#30363d').attr('stroke-width',0.6).attr('stroke-opacity',0.5);
