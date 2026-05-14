@@ -155,9 +155,9 @@ footer a{color:var(--accent);text-decoration:none}
   </div>
   <div class="sec" id="s-age">
     <div class="sh"><h2 class="st">🗓 Age vs Stars</h2><p class="sd">Does age equal popularity? Each circle is a repository. Click any repo in the list to highlight it on the chart.</p></div>
-    <div style="display:flex;gap:20px;align-items:center">
+    <div style="display:flex;gap:20px;align-items:flex-start">
       <svg id="ac" height="480" style="flex:1;min-width:0"></svg>
-      <div id="ageList" style="width:220px;flex-shrink:0;height:480px;overflow-y:auto;padding:4px 0 4px 8px;background:transparent;align-self:center"></div>
+      <div id="ageList" style="width:220px;flex-shrink:0;height:480px;overflow-y:auto;padding:4px 0 4px 8px;background:transparent"></div>
     </div>
   </div>
   <div class="sec" id="s-drama">
@@ -177,7 +177,7 @@ footer a{color:var(--accent);text-decoration:none}
 <footer><div class="wrap"><p>⬆ GitUp Arena · <a href="https://github.com/moogeedoo82/git-up" target="_blank">github.com/moogeedoo82/git-up</a> · Data refreshed daily at 02:00 UTC via GitHub Actions · <span id="fc"></span></p></div></footer>
 
 <script>
-const BASE='https://gitup-api.moogeedoo.workers.dev/';
+const BASE='https://raw.githubusercontent.com/moogeedoo82/git-up/main/';
 const TT=document.getElementById('tt');
 const LC={'Python':'#3572A5','TypeScript':'#2b7489','JavaScript':'#f1e05a','Markdown':'#083fa1','C++':'#f34b7d','Rust':'#dea584','Go':'#00ADD8','Java':'#b07219','Shell':'#89e051','C':'#6e6e6e','HTML':'#e34c26','Jupyter Notebook':'#da5b0b','Vue':'#41b883','Ruby':'#701516','Swift':'#ffac45','Kotlin':'#A97BFF','Dart':'#00B4AB','—':'#8b949e'};
 const AVC=['#58a6ff','#3fb950','#f78166','#d2a8ff','#ffa657','#79c0ff','#56d364','#ff7b72'];
@@ -391,7 +391,7 @@ function buildUniverse(){
     .force('collision',d3.forceCollide(d=>d.type==='lang'?lS(d.count)+6:rS(d.stars||1)+3))
     .force('x',d3.forceX(W/2).strength(0.06))
     .force('y',d3.forceY(H/2).strength(0.06))
-    .alphaDecay(0.02).stop();
+    .alphaDecay(0.02);
 
   const link=svg.append('g').selectAll('line').data(links).join('line')
     .attr('stroke',d=>d.secondary?'#58a6ff':'#30363d')
@@ -461,7 +461,8 @@ function buildUniverse(){
     d.vy=(Math.random()-0.5)*0.06;
   });
   let floatRunning=false;
-  if(!floatRunning){
+  sim.on('end',()=>{
+    if(floatRunning)return;
     floatRunning=true;
     function floatTick(){
       // Node-vs-node elastic bounce
@@ -937,7 +938,7 @@ function renderGalaxyGraph(svg,W,H,nodes,links,loadMsg){
     .force('charge',d3.forceManyBody().strength(d=>d.type==='contrib'?-300:-60))
     .force('center',d3.forceCenter(W/2,H/2))
     .force('collision',d3.forceCollide(d=>d.type==='contrib'?cS(d.repos)+4:rS(d.stars||1)+3))
-    .alphaDecay(0.02).stop();
+    .alphaDecay(0.02);
 
   const link=svg.append('g').selectAll('line').data(links).join('line')
     .attr('stroke','#30363d').attr('stroke-width',0.6).attr('stroke-opacity',0.5);
@@ -1004,8 +1005,8 @@ function renderGalaxyGraph(svg,W,H,nodes,links,loadMsg){
     node.attr('transform',d=>`translate(${d.x},${d.y})`);
   });
 
-  // pre-warmed
-  function ft(){
+  sim.on('end',()=>{
+    function ft(){
       // Node-vs-node elastic bounce
       for(let i=0;i<nodes.length;i++){
         for(let j=i+1;j<nodes.length;j++){
@@ -1136,6 +1137,3 @@ init();
 </script>
 </body>
 </html>
-
-
-
