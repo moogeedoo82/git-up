@@ -84,7 +84,7 @@ header{border-bottom:1px solid var(--border);padding:20px 0;position:sticky;top:
 .tr{display:flex;justify-content:space-between;gap:12px;color:var(--text2);margin-top:3px}
 .tv{color:var(--text);font-family:var(--fm)}
 .tab{margin-top:8px;padding-top:8px;border-top:1px solid var(--border);font-size:11px;color:var(--text2);line-height:1.5;font-style:italic}
-footer{margin-top:80px;border-top:1px solid var(--border);padding:32px 0;text-align:center;font-size:12px;color:var(--text2);font-family:var(--fm)}
+#gc,#nc{opacity:0;transition:opacity 1.2s ease;}#gc.loaded,#nc.loaded{opacity:1;}footer{margin-top:80px;border-top:1px solid var(--border);padding:32px 0;text-align:center;font-size:12px;color:var(--text2);font-family:var(--fm)}
 footer a{color:var(--accent);text-decoration:none}
 #lo{position:fixed;inset:0;background:var(--bg);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:1000;gap:20px}
 .ll{font-family:var(--fd);font-size:3rem;font-weight:800;color:var(--accent);animation:pulse 1.5s infinite}
@@ -166,7 +166,7 @@ footer a{color:var(--accent);text-decoration:none}
   </div>
   <div class="sec" id="s-galaxy">
     <div class="sh"><h2 class="st">🌌 Contributor Galaxy</h2><p class="sd">Contributors (large nodes) connected to the repos they contributed to. Drag to explore. Hover for details. Click contributor to visit GitHub profile.</p></div>
-    <svg id="gc" height="620" style="width:100%"></svg>
+    <svg id="gc" height="820" style="width:100%"></svg>
     <div id="gl" style="display:flex;flex-wrap:wrap;gap:12px;margin-top:16px;font-size:12px;color:var(--text2)"></div>
   </div>
   <div class="sec" id="s-rising">
@@ -462,6 +462,7 @@ function buildUniverse(){
   });
   let floatRunning=false;
   sim.on('end',()=>{
+    document.getElementById('nc').classList.add('loaded');
     if(floatRunning)return;
     floatRunning=true;
     function floatTick(){
@@ -1006,6 +1007,7 @@ function renderGalaxyGraph(svg,W,H,nodes,links,loadMsg){
   });
 
   sim.on('end',()=>{
+    document.getElementById('gc').classList.add('loaded');
     function ft(){
       // Node-vs-node elastic bounce
       for(let i=0;i<nodes.length;i++){
@@ -1103,7 +1105,7 @@ function buildRising(){
           <div style="color:var(--text2);font-size:11px">${r.owner}</div>
         </div>
         <div style="flex:1;height:24px;background:var(--bg4);border-radius:6px;overflow:hidden">
-          <div data-w="${pct}" style="height:100%;width:0%;background:linear-gradient(90deg,${col}aa,${col});border-radius:6px;display:flex;align-items:center;padding-left:8px;transition:width 1s ease">
+          <div style="height:100%;width:0%;background:linear-gradient(90deg,${col}aa,${col});border-radius:6px;display:flex;align-items:center;padding-left:8px;transition:width 1s ease" data-w="${pct}">
             <span style="font-size:10px;color:rgba(255,255,255,.8);font-family:var(--fm);white-space:nowrap">${pct>20?r.owner:''}</span>
           </div>
         </div>
