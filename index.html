@@ -856,7 +856,7 @@ function buildGalaxy(){
   const activeRepoKeys=new Set();
   topContribs.forEach(c=>{
     const rSet=loginToRepos[c.login]||new Set();
-    [...rSet].slice(0,20).forEach(key=>activeRepoKeys.add(key));
+    [...rSet].forEach(key=>activeRepoKeys.add(key));
   });
 
   // ── Build repo nodes, resolving keys to repo objects ─────────────────────────
@@ -867,7 +867,7 @@ function buildGalaxy(){
     const label=r?r.name:key;
     if(seenRepoNames.has(label))return; // deduplicate
     seenRepoNames.add(label);
-    if(repoNodes.length>=150)return;
+    
     repoNodes.push({
       id:'r_'+key, label, type:'repo',
       stars:r?r.stars:0, url:r?r.url:'#',
@@ -904,7 +904,7 @@ function buildGalaxy(){
   const links=[];
   topContribs.forEach(c=>{
     const rSet=loginToRepos[c.login]||new Set();
-    [...rSet].slice(0,20).forEach(key=>{
+    [...rSet].forEach(key=>{
       const targetId='r_'+key;
       if(repoNodeIds.has(targetId))
         links.push({source:'c_'+c.login,target:targetId});
