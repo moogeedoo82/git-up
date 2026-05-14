@@ -508,6 +508,7 @@ function buildUniverse(){
       node.attr('transform',d=>`translate(${d.x},${d.y})`);
       requestAnimationFrame(floatTick);
     }
+    sim.stop();
     floatTick();
   },3000);
 
