@@ -455,13 +455,8 @@ function buildUniverse(){
 
   // Slow floating animation with bounce-back within bounds
   const PAD=50; // padding from edges
-  // Give each node a slow random velocity after sim ends
-  let floatRunning=false;
-  sim.on('end',()=>{
+  setTimeout(()=>{
     document.getElementById('nc').classList.add('loaded');
-    if(floatRunning)return;
-    floatRunning=true;
-    // Set initial velocities now that sim has settled
     nodes.forEach(d=>{
       d.vx=(Math.random()-0.5)*0.3;
       d.vy=(Math.random()-0.5)*0.3;
@@ -514,7 +509,7 @@ function buildUniverse(){
       requestAnimationFrame(floatTick);
     }
     floatTick();
-  });
+  },3000);
 
   document.getElementById('bl').innerHTML=langSet.slice(0,8).map(l=>`<span><span style="width:10px;height:10px;border-radius:50%;background:${LC[l]||'#58a6ff'};display:inline-block;margin-right:4px"></span>${l}</span>`).join('')
     +'<span style="color:var(--text2)">· Large = language · Small = repo · Drag · Click repo to visit</span>';
@@ -1139,3 +1134,7 @@ init();
 </script>
 </body>
 </html>
+
+
+
+
