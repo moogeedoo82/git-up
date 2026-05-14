@@ -157,7 +157,7 @@ footer a{color:var(--accent);text-decoration:none}
     <div class="sh"><h2 class="st">🗓 Age vs Stars</h2><p class="sd">Does age equal popularity? Each circle is a repository. Click any repo in the list to highlight it on the chart.</p></div>
     <div style="display:flex;gap:20px;align-items:stretch;height:700px">
       <svg id="ac" style="flex:1;min-width:0;height:100%"></svg>
-      <div id="ageList" style="width:220px;flex-shrink:0;height:600px;overflow-y:auto;padding:4px 0 4px 8px;background:transparent;align-self:flex-start;margin-top:-20px"></div>
+      <div id="ageList" style="width:220px;flex-shrink:0;height:700px;overflow-y:auto;padding:4px 0 4px 8px;background:transparent;align-self:flex-start"></div>
     </div>
   </div>
   <div class="sec" id="s-drama">
@@ -607,8 +607,8 @@ function sortC(by){
 function buildAge(){
   const svg=d3.select('#ac');
   const W=document.getElementById('ac').parentElement.clientWidth||900;
-  const H=480;const m={t:20,r:30,b:55,l:70};
-  svg.attr('width',W).selectAll('*').remove();
+  const H=700;const m={t:20,r:30,b:55,l:70};
+  svg.attr('width',W).attr('height',H).selectAll('*').remove();
   const data=repos.filter(r=>r.age&&r.age>0&&r.stars>0);
   if(!data.length)return;
   const x=d3.scaleLinear().domain([0,d3.max(data,d=>d.age)*1.05]).range([m.l,W-m.r]);
