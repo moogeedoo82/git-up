@@ -10,6 +10,8 @@
 [![Vercel](https://img.shields.io/badge/Hosted_on-Vercel-black?style=for-the-badge&logo=vercel)](https://gitup-arena.vercel.app/)
 [![Updated Daily](https://img.shields.io/badge/Updated-Daily-green?style=for-the-badge)]()
 [![Repos Tracked](https://img.shields.io/badge/Repos_Tracked-300-orange?style=for-the-badge)]()
+### 🌐 [https://gitup-arena.vercel.app](https://gitup-arena.vercel.app)
+
 [![License](https://img.shields.io/badge/License-CC_BY--NC_4.0-lightgrey?style=for-the-badge)](LICENSE)
 
 </div>
