@@ -6,7 +6,7 @@
 
 **Real-time rankings, live races, and contributor intelligence for the top 300 GitHub repositories — updated every day at 02:00 UTC automatically.**
 
-[![Live Dashboard](https://img.shields.io/badge/🌐_Live_Dashboard-Visit-blue?style=for-the-badge)](https://moogeedoo82.github.io/git-up/)
+[![Live Dashboard](https://img.shields.io/badge/🌐_Live_Dashboard-Visit-blue?style=for-the-badge)](https://gitup-arena.vercel.app/)
 [![Updated Daily](https://img.shields.io/badge/Updated-Daily-green?style=for-the-badge)]()
 [![Repos Tracked](https://img.shields.io/badge/Repos_Tracked-300-orange?style=for-the-badge)]()
 [![License](https://img.shields.io/badge/License-CC_BY--NC_4.0-lightgrey?style=for-the-badge)](LICENSE)
@@ -81,6 +81,6 @@ This project is licensed under [CC BY-NC 4.0](LICENSE) — free to use for non-c
 
 **Built with D3.js · Powered by GitHub Actions · Secured by Cloudflare**
 
-[🌐 Visit Live Dashboard](https://moogeedoo82.github.io/git-up/)
+[🌐 Visit Live Dashboard](https://gitup-arena.vercel.app/)
 
 </div>
