@@ -71,15 +71,6 @@ Repos gaining stars fastest over the tracked period. The bigger the jump, the ho
 
 ---
 
-## ⚙️ How It Works
-
-- A private pipeline (`git-up-engine`) runs daily at **02:00 UTC** via GitHub Actions
-- It fetches data from the GitHub API for the top 300 repositories
-- Data is served securely via **Cloudflare Workers** — no raw data exposed publicly
-- The dashboard reads live data and renders all visualizations client-side
-
----
-
 ## 📄 License
 
 This project is licensed under [CC BY-NC 4.0](LICENSE) — free to use for non-commercial purposes with attribution.
